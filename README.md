@@ -40,7 +40,7 @@ If the videos are e.g. 128 x 128 pixels and 20 frames long:
 batch_size = 16
 generator = VideoGenerator(width=128, height=128, frames=20,
                            batch_size=batch_size, shuffle=True,
-                           inputdir="./data", fileext".avi")
+                           inputdir="./data", fileext=".avi")
 ```
 
 3) Create generators for training and evaluation:
