@@ -6,6 +6,8 @@ This has been adapted from the great example at: https://stanford.edu/~shervine/
 
 Unlike shervinea's example, this method loads data using a simple directory structure rather than a dictionary of IDs and labels.
 
+It seems to be quite efficient (I get ~ 98% GPU usage on a 1080 Ti, so there's no CPU bottlenecking; I will likely introduce data augmentation to this with time).
+
 ## Usage
 
 1) Structure data in directories, like the following example:
