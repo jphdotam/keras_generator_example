@@ -4,7 +4,7 @@ An example of a Keras generator which reads videos and labels using a directory 
 
 This has been adapted from the great example at: https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly.html
 
-Unlike @shervinea 's example, this method loads data using am simple directory structure rather than a dictionary of IDs and labels.
+Unlike @shervinea 's example, this method loads data using a simple directory structure rather than a dictionary of IDs and labels.
 
 ## Usage
 
