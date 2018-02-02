@@ -1,10 +1,10 @@
 # keras_generator_example
 
-An example of a Keras generator which reads videos and labels using a directory format
+An example of a Keras generator which reads three-dimensional npy files (e.g. of videos) and labels using a directory format
 
 This has been adapted from the great example at: https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly.html
 
-Unlike @shervinea 's example, this method loads data using a simple directory structure rather than a dictionary of IDs and labels.
+Unlike shervinea's example, this method loads data using a simple directory structure rather than a dictionary of IDs and labels.
 
 ## Usage
 
@@ -14,22 +14,22 @@ Unlike @shervinea 's example, this method loads data using a simple directory st
 data/
 ├── train/
     ├── label1/
-        ├── example1.avi
-        ├── example7.avi
-        ├── example10.avi
+        ├── example1.npy
+        ├── example7.npy
+        ├── example10.npy
     ├── label2/
-        ├── example4.avi
-        ├── example8.avi
-        ├── example11.avi
+        ├── example4.npy
+        ├── example8.npy
+        ├── example11.npy
 ├── test/
     ├── label1/
-        ├── example2.avi
-        ├── example5.avi
-        ├── example9.avi
+        ├── example2.npy
+        ├── example5.npy
+        ├── example9.npy
     ├── label2/
-        ├── example6.avi
-        ├── example11.avi
-        ├── example12.avi
+        ├── example6.npy
+        ├── example11.npy
+        ├── example12.npy
 ```
 
 2) Initialise the generator:
@@ -40,7 +40,7 @@ If the videos are e.g. 128 x 128 pixels and 20 frames long:
 batch_size = 16
 generator = VideoGenerator(width=128, height=128, frames=20,
                            batch_size=batch_size, shuffle=True,
-                           inputdir="./data", fileext=".avi")
+                           inputdir="./data", fileext=".npy")
 ```
 
 3) Create generators for training and evaluation:
