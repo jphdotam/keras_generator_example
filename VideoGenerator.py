@@ -23,7 +23,7 @@ class VideoGenerator:
         self.inputdir = inputdir
         self.fileext = fileext
 
-        self.filenames_train, self.filenames_test, self.filenames_eval = self.load_filenames()
+        self.filenames_train, self.filenames_test, self.filenames_evalu = self.load_filenames()
 
     def generate(self, train_or_test_or_eval):
         filenames = self.filenames_train
@@ -63,5 +63,5 @@ class VideoGenerator:
     def load_filenames(self):
         train = glob.glob("{}train/**/*{}".format(self.inputdir, self.fileext), recursive=True)
         test = glob.glob("{}test/**/*{}".format(self.inputdir, self.fileext), recursive=True)
-        eval = glob.glob("{}eval/**/*{}".format(self.inputdir, self.fileext), recursive=True)
+        evalu = glob.glob("{}eval/**/*{}".format(self.inputdir, self.fileext), recursive=True)
         return train, test, eval
