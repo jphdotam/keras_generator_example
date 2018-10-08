@@ -2,10 +2,6 @@
 
 An example of a Keras generator which reads three-dimensional npy files (e.g. of videos) and labels using a directory format
 
-This has been adapted from the great example at: https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly.html
-
-Unlike shervinea's example, this method loads data using a simple directory structure rather than a dictionary of IDs and labels.
-
 It seems to be quite efficient (I get ~ 98% GPU usage on a 1080 Ti, so there's no CPU bottlenecking; I will likely introduce data augmentation to this with time).
 
 ## Usage
@@ -36,32 +32,32 @@ data/
 
 2) Initialise the generator:
 
-If the videos are e.g. 128 x 128 pixels and 20 frames long:
+If the videos are e.g. 299 x 299 pixels in RGB and 10 frames long in npy or npz format:
 
 ```python
-batch_size = 16
-generator = VideoGenerator(width=128, height=128, frames=20,
-                           batch_size=batch_size, shuffle=True,
-                           inputdir="./data", fileext=".npy")
+self.generator = VideoGenerator(train_dir=train_dir,
+                                test_dir=test_dir,
+                                dims=(10, 299, 299, 3),
+                                batch_size=16,
+                                shuffle=True,
+                                file_ext=".np*")
 ```
 
 3) Create generators for training and evaluation:
 
 ```python
-training_generator = generator.generate(train_or_test_or_eval="train")
-training_steps_per_epoch = len(generator.filenames_train) // batch_size
-testing_generator = generator.generate(train_or_test_or_eval="test")
-testing_steps_per_epoch = len(generator.filenames_test) // batch_size
+self.training_generator = self.generator.generate(train_or_test='train')
+self.training_steps_per_epoch = len(self.generator.filenames_train) // self.batch_size
+self.testing_generator = self.generator.generate(train_or_test="test")
+self.testing_steps_per_epoch = len(self.generator.filenames_test) // self.batch_size
 ```
 
 4) Fit a Keras model to a generator:
 
 ```python
-model.fit_generator(generator=training_generator,
-                     steps_per_epoch=training_steps_per_epoch,
-                     verbose=2,
-                     max_queue_size=10,
-                     validation_data=testing_generator,
-                     validation_steps=testing_steps_per_epoch,
-                     epochs=epochs)
+self.model.fit_generator(self.training_generator,
+                         steps_per_epoch=self.training_steps_per_epoch,
+                         epochs=epochs,
+                         validation_data=self.testing_generator,
+                         validation_steps=self.testing_steps_per_epoch)
 ```
