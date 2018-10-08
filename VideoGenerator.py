@@ -1,67 +1,82 @@
 import glob
-import csv
-import numpy as np
+import random
 import os
+import numpy as np
 
-# Adapted from https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly.html
-
-NUMBER_OF_CLASSES = 2 
-CLASSES = {
-    'label1': 0,
-    'label2': 1
-}
 
 class VideoGenerator:
 
-    def __init__(self, width, height, frames, batch_size,
-                 shuffle=True, inputdir="./data/", fileext=".npy"):
-        self.dim_x = width
-        self.dim_y = height
-        self.dim_z = frames
+    def __init__(self, train_dir, test_dir, dims, batch_size=2, shuffle=True, file_ext=".npy"):
+        self.train_dir = train_dir
+        self.test_dir = test_dir
+        self.frames, self.width, self.height, self.channels = dims
         self.batch_size = batch_size
         self.shuffle = shuffle
-        self.inputdir = inputdir
-        self.fileext = fileext
+        self.file_ext = file_ext
 
-        self.filenames_train, self.filenames_test, self.filenames_evalu = self.load_filenames()
+        self.filenames_train = self.get_filenames(train_dir)
+        if self.test_dir:
+            self.filenames_test = self.get_filenames(test_dir)
 
-    def generate(self, train_or_test_or_eval):
-        filenames = self.filenames_train
-        if train_or_test_or_eval == "test":
-            filenames = self.filenames_test
-        elif train_or_test_or_eval == "eval":
-            filenames = self.filenames_eval
+        self.classname_by_id = {i: cls for i, cls in
+                                enumerate({os.path.basename(os.path.dirname(file)) for file in self.filenames_train})}
+        self.id_by_classname = {cls: i for i, cls in self.classname_by_id.items()}
+
+        self.n_classes = len(self.classname_by_id)
+        assert self.n_classes == len(
+            self.id_by_classname), "Number of unique classes for training set isn't equal to testing set"
+
+    def get_filenames(self, dir):
+        filenames = glob.glob(os.path.join(dir, f"**/*{self.file_ext}"))
+        return filenames
+
+    def generate(self, train_or_test, rotation_range=None, heigt_shift_range=None, width_shift_range=None,
+                 shear_range=None, zoom_range=None, horizontal_flip=None, vertical_flip=None, brightness_range=None):
+
+        if train_or_test == 'train':
+            dir = self.train_dir
+        elif train_or_test == 'test':
+            dir = self.test_dir
+        else:
+            raise ValueError
+
         while True:
-            indexes = self.__get_exploration_order(filenames)
-            imax = int(len(indexes) / self.batch_size)
-            for i in range(imax):
-                filenames_batch = [filenames[k] for k in indexes[i * self.batch_size:(i + 1) * self.batch_size]]
-                X, y = self.__data_generation(filenames_batch)
-                yield X, y
+            filenames = self.get_filenames(dir)
+            if self.shuffle:
+                random.shuffle(filenames)
 
-    def __get_exploration_order(self, filenames):
-        indexes = np.arange(len(filenames))
-        if self.shuffle:
-            np.random.shuffle(indexes)
-        return indexes
+            n_batches = int(len(filenames) / self.batch_size)
 
-    def __data_generation(self, filenames_batch):
-        X = np.empty((self.batch_size, self.dim_z, self.dim_y, self.dim_x, 1))
-        y = np.empty(self.batch_size, dtype=int)
+            for i in range(n_batches):
+                # print(f"Slicing {i*self.batch_size}:{(i+1)*self.batch_size}")
+                filenames_batch = filenames[i * self.batch_size:(i + 1) * self.batch_size]
+                x, y = self.__generate_data_frome_batch_file_names(filenames_batch)
+                yield x, y
+
+    def __generate_data_frome_batch_file_names(self, filenames_batch):
+        data = []
+        labels = []
 
         for i, filename in enumerate(filenames_batch):
-            X[i, :, :, :, 0] = np.load(filename)
-            y[i] = CLASSES[os.path.basename(os.path.dirname(filename))]
+            npy = np.load(filename)
+            try:
+                npy = npy[npy.files[0]] # If an npz file we need to get the data out using the filename as a key
+            except:
+                pass
 
-        return X, self.sparsify(y)
+            if len(npy.shape) == 3:  # Add colour channel to B&W images
+                npy = np.expand_dims(npy, axis=-1)
 
-    @staticmethod
-    def sparsify(y):
-        return np.array([[1 if y[i] == j else 0 for j in range(NUMBER_OF_CLASSES)]
-                         for i in range(y.shape[0])])
+            data.append(npy)
+            label = os.path.basename(os.path.dirname(filename))
+            labels.append(self.id_by_classname[label])
 
-    def load_filenames(self):
-        train = glob.glob("{}train/**/*{}".format(self.inputdir, self.fileext), recursive=True)
-        test = glob.glob("{}test/**/*{}".format(self.inputdir, self.fileext), recursive=True)
-        evalu = glob.glob("{}eval/**/*{}".format(self.inputdir, self.fileext), recursive=True)
-        return train, test, eval
+        x = np.stack(data)
+        y = self.list_of_integers_to_2d_onehots(labels)
+        return x, y
+
+
+
+    def list_of_integers_to_2d_onehots(self, integers):
+        array = [[1 if integers[sample] == cls else 0 for cls in range(self.n_classes)] for sample in range(len(integers))]
+        return np.array(array)
